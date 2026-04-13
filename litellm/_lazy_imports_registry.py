@@ -271,6 +271,7 @@ LLM_CONFIG_NAMES = (
     "AzureOpenAIGPT5Config",
     "AzureOpenAITextConfig",
     "HostedVLLMChatConfig",
+    "SGLangChatConfig",
     "HostedVLLMEmbeddingConfig",
     # Alias for backwards compatibility
     "VolcEngineConfig",  # Alias for VolcEngineChatConfig
@@ -1043,6 +1044,10 @@ _LLM_CONFIGS_IMPORT_MAP = {
     "HostedVLLMChatConfig": (
         ".llms.hosted_vllm.chat.transformation",
         "HostedVLLMChatConfig",
+    ),
+    "SGLangChatConfig": (
+        ".llms.sglang.chat.transformation",
+        "SGLangChatConfig",
     ),
     "HostedVLLMEmbeddingConfig": (
         ".llms.hosted_vllm.embedding.transformation",

@@ -567,6 +567,7 @@ LITELLM_CHAT_PROVIDERS = [
     "custom",
     "litellm_proxy",
     "hosted_vllm",
+    "sglang",
     "llamafile",
     "lm_studio",
     "galadriel",
@@ -777,6 +778,7 @@ openai_compatible_providers: List = [
     "github",
     "litellm_proxy",
     "hosted_vllm",
+    "sglang",
     "llamafile",
     "lm_studio",
     "galadriel",
@@ -1421,7 +1423,7 @@ APSCHEDULER_REPLACE_EXISTING = os.getenv(
     "1",
 ]  # always replace existing jobs
 
-# The number of tag entries are higher than number of user, team entries. This leads to a higher QPS. 
+# The number of tag entries are higher than number of user, team entries. This leads to a higher QPS.
 # This will run tag spcific tasks at a later time to smooth QPS
 DAILY_TAG_SPEND_BATCH_MULTIPLIER = 2.3
 

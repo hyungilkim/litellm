@@ -16,6 +16,7 @@ import pytest
 import litellm
 from litellm.types.router import LiteLLM_Params
 
+
 def test_get_llm_provider():
     _, response, _, _ = litellm.get_llm_provider(model="anthropic.claude-v2:1")
 
@@ -192,6 +193,39 @@ def test_get_llm_provider_hosted_vllm():
     assert dynamic_api_key == "fake-api-key"
 
 
+def test_get_llm_provider_sglang_prefix_stripping():
+    model, custom_llm_provider, dynamic_api_key, _ = litellm.get_llm_provider(
+        model="sglang/Qwen/Qwen2.5-7B-Instruct",
+    )
+    assert custom_llm_provider == "sglang"
+    assert model == "Qwen/Qwen2.5-7B-Instruct"
+    assert dynamic_api_key == "fake-api-key"
+
+
+def test_get_llm_provider_sglang_env_fallback(monkeypatch):
+    monkeypatch.setenv("SGLANG_API_BASE", "http://localhost:30000")
+    monkeypatch.setenv("SGLANG_API_KEY", "sglang-env-key")
+    model, custom_llm_provider, dynamic_api_key, api_base = litellm.get_llm_provider(
+        model="sglang/Qwen/Qwen2.5-7B-Instruct",
+    )
+    assert custom_llm_provider == "sglang"
+    assert model == "Qwen/Qwen2.5-7B-Instruct"
+    assert dynamic_api_key == "sglang-env-key"
+    assert api_base == "http://localhost:30000/v1"
+
+
+def test_providers_json_does_not_define_sglang():
+    # Keep sglang out of providers.json so provider resolution uses the explicit sglang branch.
+    providers_json_path = os.path.join(
+        os.path.dirname(__file__),
+        "../../litellm/llms/openai_like/providers.json",
+    )
+    with open(providers_json_path, "r") as file:
+        provider_json_text = file.read()
+
+    assert '"sglang"' not in provider_json_text
+
+
 def test_get_llm_provider_llamafile():
     model, custom_llm_provider, dynamic_api_key, api_base = litellm.get_llm_provider(
         model="llamafile/mistralai/mistral-7b-instruct-v0.2",
@@ -252,7 +286,9 @@ def test_xai_api_base(model):
     assert api_base == "https://api.x.ai/v1"
     assert dynamic_api_key == "xai-my-specialkey"
 
+
 # -------- Tests for force_use_litellm_proxy ---------
+
 
 def test_get_litellm_proxy_custom_llm_provider():
     """
@@ -262,16 +298,28 @@ def test_get_litellm_proxy_custom_llm_provider():
     expected_api_base = "http://localhost:8000"
     expected_api_key = "test_proxy_key"
 
-    with patch.dict(os.environ, {
-        "LITELLM_PROXY_API_BASE": expected_api_base,
-        "LITELLM_PROXY_API_KEY": expected_api_key
-    }, clear=True):
-        model, provider, key, base = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(model=test_model)
+    with patch.dict(
+        os.environ,
+        {
+            "LITELLM_PROXY_API_BASE": expected_api_base,
+            "LITELLM_PROXY_API_KEY": expected_api_key,
+        },
+        clear=True,
+    ):
+        (
+            model,
+            provider,
+            key,
+            base,
+        ) = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(
+            model=test_model
+        )
 
     assert model == test_model
     assert provider == "litellm_proxy"
     assert key == expected_api_key
     assert base == expected_api_base
+
 
 def test_get_litellm_proxy_with_args_override_env_vars():
     """
@@ -280,24 +328,29 @@ def test_get_litellm_proxy_with_args_override_env_vars():
     test_model = "gpt-4"
     arg_api_base = "http://custom-proxy.com"
     arg_api_key = "custom_key_from_arg"
-    
+
     env_api_base = "http://env-proxy.com"
     env_api_key = "env_key"
 
-    with patch.dict(os.environ, {
-        "LITELLM_PROXY_API_BASE": env_api_base,
-        "LITELLM_PROXY_API_KEY": env_api_key
-    }, clear=True):
-        model, provider, key, base = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(
-            model=test_model,
-            api_base=arg_api_base,
-            api_key=arg_api_key
+    with patch.dict(
+        os.environ,
+        {"LITELLM_PROXY_API_BASE": env_api_base, "LITELLM_PROXY_API_KEY": env_api_key},
+        clear=True,
+    ):
+        (
+            model,
+            provider,
+            key,
+            base,
+        ) = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(
+            model=test_model, api_base=arg_api_base, api_key=arg_api_key
         )
 
     assert model == test_model
     assert provider == "litellm_proxy"
     assert key == arg_api_key
     assert base == arg_api_base
+
 
 def test_get_litellm_proxy_model_prefix_stripping():
     """
@@ -308,18 +361,31 @@ def test_get_litellm_proxy_model_prefix_stripping():
     expected_api_base = "http://localhost:4000"
     expected_api_key = "proxy_secret_key"
 
-    with patch.dict(os.environ, {
-        "LITELLM_PROXY_API_BASE": expected_api_base,
-        "LITELLM_PROXY_API_KEY": expected_api_key
-    }, clear=True):
-        model, provider, key, base = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(model=original_model)
+    with patch.dict(
+        os.environ,
+        {
+            "LITELLM_PROXY_API_BASE": expected_api_base,
+            "LITELLM_PROXY_API_KEY": expected_api_key,
+        },
+        clear=True,
+    ):
+        (
+            model,
+            provider,
+            key,
+            base,
+        ) = litellm.LiteLLMProxyChatConfig().litellm_proxy_get_custom_llm_provider_info(
+            model=original_model
+        )
 
     assert model == expected_model
     assert provider == "litellm_proxy"
     assert key == expected_api_key
     assert base == expected_api_base
 
+
 # -------- Tests for get_llm_provider triggering use_litellm_proxy ---------
+
 
 def test_get_llm_provider_LITELLM_PROXY_ALWAYS_true():
     """
@@ -330,19 +396,24 @@ def test_get_llm_provider_LITELLM_PROXY_ALWAYS_true():
     proxy_api_base = "http://my-global-proxy.com"
     proxy_api_key = "global_proxy_key"
 
-    with patch.dict(os.environ, {
-        "USE_LITELLM_PROXY": "True",
-        "LITELLM_PROXY_API_BASE": proxy_api_base,
-        "LITELLM_PROXY_API_KEY": proxy_api_key
-    }, clear=True):
+    with patch.dict(
+        os.environ,
+        {
+            "USE_LITELLM_PROXY": "True",
+            "LITELLM_PROXY_API_BASE": proxy_api_base,
+            "LITELLM_PROXY_API_KEY": proxy_api_key,
+        },
+        clear=True,
+    ):
         model, provider, key, base = litellm.get_llm_provider(model=test_model_input)
-    
+
     print("get_llm_provider", model, provider, key, base)
 
     assert model == expected_model_output
     assert provider == "litellm_proxy"
     assert key == proxy_api_key
     assert base == proxy_api_base
+
 
 def test_get_llm_provider_LITELLM_PROXY_ALWAYS_true_model_prefix():
     """
@@ -353,11 +424,15 @@ def test_get_llm_provider_LITELLM_PROXY_ALWAYS_true_model_prefix():
     proxy_api_base = "http://another-proxy.net"
     proxy_api_key = "another_key"
 
-    with patch.dict(os.environ, {
-        "USE_LITELLM_PROXY": "True",
-        "LITELLM_PROXY_API_BASE": proxy_api_base,
-        "LITELLM_PROXY_API_KEY": proxy_api_key
-    }, clear=True):
+    with patch.dict(
+        os.environ,
+        {
+            "USE_LITELLM_PROXY": "True",
+            "LITELLM_PROXY_API_BASE": proxy_api_base,
+            "LITELLM_PROXY_API_KEY": proxy_api_key,
+        },
+        clear=True,
+    ):
         model, provider, key, base = litellm.get_llm_provider(model=test_model_input)
 
     assert model == expected_model_output
@@ -371,24 +446,33 @@ def test_get_llm_provider_use_proxy_arg_true():
     Tests get_llm_provider uses litellm_proxy when use_proxy=True argument is passed.
     """
     test_model_input = "mistral/mistral-large"
-    expected_model_output = "mistral/mistral-large" # force_use_litellm_proxy keep the model name
+    expected_model_output = (
+        "mistral/mistral-large"  # force_use_litellm_proxy keep the model name
+    )
     proxy_api_base = "http://my-arg-proxy.com"
     proxy_api_key = "arg_proxy_key"
-    
+
     # Ensure LITELLM_PROXY_ALWAYS is not set or False
-    with patch.dict(os.environ, {
-        "LITELLM_PROXY_API_BASE": proxy_api_base,
-        "LITELLM_PROXY_API_KEY": proxy_api_key
-    }, clear=True): # clear=True removes LITELLM_PROXY_ALWAYS if it was set by other tests
+    with patch.dict(
+        os.environ,
+        {
+            "LITELLM_PROXY_API_BASE": proxy_api_base,
+            "LITELLM_PROXY_API_KEY": proxy_api_key,
+        },
+        clear=True,
+    ):  # clear=True removes LITELLM_PROXY_ALWAYS if it was set by other tests
         model, provider, key, base = litellm.get_llm_provider(
-            model=test_model_input, 
-            litellm_params=LiteLLM_Params(use_litellm_proxy=True, model=test_model_input)
+            model=test_model_input,
+            litellm_params=LiteLLM_Params(
+                use_litellm_proxy=True, model=test_model_input
+            ),
         )
 
     assert model == expected_model_output
     assert provider == "litellm_proxy"
     assert key == proxy_api_key
     assert base == proxy_api_base
+
 
 def test_get_llm_provider_use_proxy_arg_true_with_direct_args():
     """
@@ -397,7 +481,7 @@ def test_get_llm_provider_use_proxy_arg_true_with_direct_args():
     """
     test_model_input = "anthropic/claude-3-opus"
     expected_model_output = "anthropic/claude-3-opus"
-    
+
     arg_api_base = "http://specific-proxy-endpoint.org"
     arg_api_key = "specific_key_for_call"
 
@@ -405,18 +489,24 @@ def test_get_llm_provider_use_proxy_arg_true_with_direct_args():
     env_proxy_api_base = "http://env-default-proxy.com"
     env_proxy_api_key = "env_default_key"
 
-    with patch.dict(os.environ, {
-        "LITELLM_PROXY_API_BASE": env_proxy_api_base,
-        "LITELLM_PROXY_API_KEY": env_proxy_api_key
-    }, clear=True):
+    with patch.dict(
+        os.environ,
+        {
+            "LITELLM_PROXY_API_BASE": env_proxy_api_base,
+            "LITELLM_PROXY_API_KEY": env_proxy_api_key,
+        },
+        clear=True,
+    ):
         model, provider, key, base = litellm.get_llm_provider(
-            model=test_model_input, 
+            model=test_model_input,
             api_base=arg_api_base,
             api_key=arg_api_key,
-            litellm_params=LiteLLM_Params(use_litellm_proxy=True, model=test_model_input)
+            litellm_params=LiteLLM_Params(
+                use_litellm_proxy=True, model=test_model_input
+            ),
         )
 
     assert model == expected_model_output
     assert provider == "litellm_proxy"
     assert key == arg_api_key  # Should use the argument key
-    assert base == arg_api_base # Should use the argument base
+    assert base == arg_api_base  # Should use the argument base
