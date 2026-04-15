@@ -94,6 +94,10 @@ def get_supported_openai_params(  # noqa: PLR0915
         )
     elif custom_llm_provider == "hosted_vllm":
         return litellm.HostedVLLMChatConfig().get_supported_openai_params(model=model)
+    elif custom_llm_provider == "sglang":
+        if request_type == "embeddings":
+            return litellm.SGLangEmbeddingConfig().get_supported_openai_params(model=model)
+        return litellm.SGLangChatConfig().get_supported_openai_params(model=model)
     elif custom_llm_provider == "vllm":
         return litellm.VLLMConfig().get_supported_openai_params(model=model)
     elif custom_llm_provider == "deepseek":

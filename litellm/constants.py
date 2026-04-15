@@ -567,6 +567,7 @@ LITELLM_CHAT_PROVIDERS = [
     "custom",
     "litellm_proxy",
     "hosted_vllm",
+    "sglang",
     "llamafile",
     "lm_studio",
     "galadriel",

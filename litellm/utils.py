@@ -8079,6 +8079,7 @@ class ProviderConfigManager:
                 False,
             ),
             LlmProviders.HOSTED_VLLM: (lambda: litellm.HostedVLLMChatConfig(), False),
+            LlmProviders.SGLANG: (lambda: litellm.SGLangChatConfig(), False),
             LlmProviders.LLAMAFILE: (lambda: litellm.LlamafileChatConfig(), False),
             LlmProviders.LM_STUDIO: (lambda: litellm.LMStudioChatConfig(), False),
             LlmProviders.GALADRIEL: (lambda: litellm.GaladrielChatConfig(), False),
@@ -8323,6 +8324,8 @@ class ProviderConfigManager:
             return litellm.GigaChatEmbeddingConfig()
         elif litellm.LlmProviders.HOSTED_VLLM == provider:
             return litellm.HostedVLLMEmbeddingConfig()
+        elif litellm.LlmProviders.SGLANG == provider:
+            return litellm.SGLangEmbeddingConfig()
         elif litellm.LlmProviders.SAGEMAKER == provider:
             from litellm.llms.sagemaker.embedding.transformation import (
                 SagemakerEmbeddingConfig,
@@ -8629,7 +8632,11 @@ class ProviderConfigManager:
             from litellm.llms.ollama.common_utils import OllamaModelInfo
 
             return OllamaModelInfo()
-        elif LlmProviders.VLLM == provider or LlmProviders.HOSTED_VLLM == provider:
+        elif (
+            LlmProviders.VLLM == provider
+            or LlmProviders.HOSTED_VLLM == provider
+            or LlmProviders.SGLANG == provider
+        ):
             from litellm.llms.vllm.common_utils import (
                 VLLMModelInfo,  # experimental approach, to reduce bloat on __init__.py
             )
@@ -8660,7 +8667,11 @@ class ProviderConfigManager:
             )
 
             return BedrockPassthroughConfig()
-        elif LlmProviders.VLLM == provider or LlmProviders.HOSTED_VLLM == provider:
+        elif (
+            LlmProviders.VLLM == provider
+            or LlmProviders.HOSTED_VLLM == provider
+            or LlmProviders.SGLANG == provider
+        ):
             from litellm.llms.vllm.passthrough.transformation import (
                 VLLMPassthroughConfig,
             )

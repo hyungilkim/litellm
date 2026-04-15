@@ -1808,6 +1808,10 @@ if TYPE_CHECKING:
     from .llms.hosted_vllm.embedding.transformation import (
         HostedVLLMEmbeddingConfig as HostedVLLMEmbeddingConfig,
     )
+    from .llms.sglang.chat.transformation import SGLangChatConfig as SGLangChatConfig
+    from .llms.sglang.embedding.transformation import (
+        SGLangEmbeddingConfig as SGLangEmbeddingConfig,
+    )
     from .llms.hosted_vllm.responses.transformation import (
         HostedVLLMResponsesAPIConfig as HostedVLLMResponsesAPIConfig,
     )
